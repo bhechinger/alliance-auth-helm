@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "alliance-auth-helm.fullname" . }}-static
+  labels:
+    {{- include "alliance-auth-helm.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.volumes.static.storageClass }}
+  storageClassName: {{ .Values.volumes.static.storageClass }}
+  {{- end }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.volumes.static.capacity }}

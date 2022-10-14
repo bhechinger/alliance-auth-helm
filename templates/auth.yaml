@@ -1,0 +1,143 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ include "alliance-auth-helm.fullname" . }}
+  labels:
+    {{- include "alliance-auth-helm.labels" . | nindent 4 }}
+
+spec:
+{{/*  replicas isn't currently supported as alliance auth doesn't scale properly*/}}
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "alliance-auth-helm.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+       {{- $files := .Files }}
+       {{- range tuple "files/auth/bot_conf.py" "files/auth/celery.py" "files/auth/local.py" "files/auth/supervisord.conf" "files/nginx/default.conf" "files/init/data_load.py"}}
+       {{ printf "sha256sum-%s" . | replace "/" "_" }}: {{ tpl ($files.Get .) $ | sha256sum }}
+       {{- end }}
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "alliance-auth-helm.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: '{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}'
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+          env:
+            {{- include "alliance-auth-data.env" . | nindent 12 }}
+          ports:
+            - name: auth
+              containerPort: 8000
+          volumeMounts:
+            - name: auth-config
+              mountPath: /home/allianceauth/myauth/myauth/settings/local.py
+              subPath: local.py
+            - name: auth-config
+              mountPath: /home/allianceauth/myauth/bot_conf.py
+              subPath: bot_conf.py
+            - name: auth-config
+              mountPath: /home/allianceauth/myauth/myauth/celery.py
+              subPath: celery.py
+            - name: auth-config
+              mountPath: /etc/supervisor/conf.d/supervisord.conf
+              subPath: supervisord.conf
+            - name: auth-static-pvc
+              mountPath: /var/www/myauth/static
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        - name: {{ .Chart.Name }}-nginx
+          image: nginx:1.21
+          ports:
+            - name: auth-static-web
+              containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+            - name: auth-static-pvc
+              mountPath: /var/www/myauth/static
+          resources:
+            requests:
+              memory: 30M
+              cpu: 5m
+            limits:
+              memory: 100M
+              cpu: 50m
+      initContainers:
+        - name: static-permissions
+          image: busybox
+          command: ["sh", "-c", "chown -R 61000:61000 /var/www/myauth/static"]
+          volumeMounts:
+            - name: auth-static-pvc
+              mountPath: /var/www/myauth/static
+        - name: database-migration
+          image: '{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}'
+          command: ["sh", "-c", "/opt/venv/bin/python /home/allianceauth/myauth/manage.py migrate"]
+          env:
+            {{- include "alliance-auth-data.env" . | nindent 12 }}
+          volumeMounts:
+            - name: auth-config
+              mountPath: /home/allianceauth/myauth/myauth/settings/local.py
+              subPath: local.py
+        - name: collect-static
+          image: '{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}'
+          command: ["sh", "-c", "/opt/venv/bin/python /home/allianceauth/myauth/manage.py collectstatic --no-input"]
+          env:
+            {{- include "alliance-auth-data.env" . | nindent 12 }}
+          volumeMounts:
+            - name: auth-config
+              mountPath: /home/allianceauth/myauth/myauth/settings/local.py
+              subPath: local.py
+            - name: auth-static-pvc
+              mountPath: /var/www/myauth/static
+        - name: data-load
+          image: '{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}'
+          command: ["sh", "-c", "/opt/venv/bin/python /home/allianceauth/myauth/data_load.py"]
+          env:
+            {{- include "alliance-auth-data.env" . | nindent 12 }}
+          volumeMounts:
+            - name: auth-config
+              mountPath: /home/allianceauth/myauth/myauth/settings/local.py
+              subPath: local.py
+            - name: init-scripts
+              mountPath: /home/allianceauth/myauth/data_load.py
+              subPath: data_load.py
+      volumes:
+        - name: auth-config
+          configMap:
+            name: {{ .Release.Name }}-auth-configmap
+        - name: init-scripts
+          configMap:
+            name: {{ .Release.Name }}-init-scripts-configmap
+        - name: nginx-config
+          configMap:
+            name: {{ .Release.Name }}-nginx-configmap
+        - name: auth-static-pvc
+          persistentVolumeClaim:
+            claimName: {{ include "alliance-auth-helm.fullname" . }}-static
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,320 @@
+# Default values for alliance-auth-helm.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# replicaCount isn't currently supported as alliance auth doesn't scale properly
+
+image:
+  repository: wonko/alliance-auth
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v3.3.0-1.0.13"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+auth:
+  sitename: "My Alliance Name"
+  protocol: "https"
+  subdomain: "auth"
+  domain: "alliance.com"
+  debug: false
+  existingSecret: authSecretName
+  # secret contains a key named "secretKey"
+
+db:
+  name: "allianceauth"
+  host: myDBserver
+  port: 3306
+  existingSecret: dbSecretName
+  # secret contains the keys "username" and "password"
+
+redis:
+  host: redis
+  port: 6379
+  existingSecret: redisSecretName
+  # secret contains the key "redis-password" if your redis server requires one
+  db: 1
+
+email:
+  host: smtp.alliance.com
+  port: 587
+  useTLS: true
+  defaultFrom: auth@alliance.com
+  existingSecret: emailSecretName
+  # secret contains the keys "username" and "password"
+
+esi:
+  email: "contact@alliance.com"
+  existingSecret: esiSecretName
+  # secret contains the keys "clientId" and "clientSecret"
+
+celery:
+  workers: 1
+  threads: 10
+
+services:
+  discord:
+    enabled: false
+    existingSecret: discordSecretName
+    # secret contains the keys "appId", "appSecret", and "botToken"
+    guildId: ""
+    syncName: False
+
+  autogroups:
+    enabled: false
+
+  eveuniverse:
+    enabled: false
+    EVEUNIVERSE_LOAD_ASTEROID_BELTS: false
+    EVEUNIVERSE_LOAD_DOGMAS: false
+    EVEUNIVERSE_LOAD_GRAPHICS: false
+    EVEUNIVERSE_LOAD_MARKET_GROUPS: false
+    EVEUNIVERSE_LOAD_MOONS: false
+    EVEUNIVERSE_LOAD_PLANETS: false
+    EVEUNIVERSE_LOAD_STARGATES: false
+    EVEUNIVERSE_LOAD_STARS: false
+    EVEUNIVERSE_LOAD_STATIONS: false
+    EVEUNIVERSE_LOAD_TYPE_MATERIALS: false
+    EVEUNIVERSE_TASKS_TIME_LIMIT: false
+    EVEUNIVERSE_USE_EVESKINSERVER: false
+
+  structures:
+    enabled: false
+    STRUCTURES_ADD_TIMERS: true
+    STRUCTURES_ADMIN_NOTIFICATIONS_ENABLED: true
+    STRUCTURES_DEFAULT_TAGS_FILTER_ENABLED: false
+    STRUCTURES_DEFAULT_LANGUAGE: en
+    STRUCTURES_DEFAULT_PAGE_LENGTH: 10
+    STRUCTURES_ESI_DIRECTOR_ERROR_MAX_RETRIES: 3
+    STRUCTURES_FEATURE_CUSTOMS_OFFICES: true
+    STRUCTURES_FEATURE_STARBASES: true
+    STRUCTURES_FEATURE_REFUELED_NOTIFICATIONS: false
+    STRUCTURES_HOURS_UNTIL_STALE_NOTIFICATION: 24
+    STRUCTURES_MOON_EXTRACTION_TIMERS_ENABLED: true
+    STRUCTURES_NOTIFICATION_DISABLE_ESI_FUEL_ALERTS: false
+    STRUCTURES_NOTIFICATION_MAX_RETRIES: 3
+    STRUCTURES_NOTIFICATION_SET_AVATAR: true
+    STRUCTURES_NOTIFICATION_SHOW_MOON_ORE: true
+    STRUCTURES_NOTIFICATION_SYNC_GRACE_MINUTES: 40
+    STRUCTURES_NOTIFICATION_WAIT_SEC: 5
+    STRUCTURES_PAGING_ENABLED: true
+    STRUCTURES_REPORT_NPC_ATTACKS: true
+    STRUCTURES_SHOW_FUEL_EXPIRES_RELATIVE: true
+    STRUCTURES_SHOW_JUMP_GATES: true
+    STRUCTURES_STRUCTURE_SYNC_GRACE_MINUTES: 120
+    STRUCTURES_TASKS_TIME_LIMIT: 7200
+    STRUCTURES_TIMERS_ARE_CORP_RESTRICTED: false
+
+  structuretimers:
+    enabled: false
+    STRUCTURETIMERS_MAX_AGE_FOR_NOTIFICATIONS: 60
+    STRUCTURETIMERS_NOTIFICATIONS_ENABLED: true
+    STRUCTURETIMERS_TIMERS_OBSOLETE_AFTER_DAYS: 30
+    STRUCTURETIMERS_DEFAULT_PAGE_LENGTH: 10
+    STRUCTURETIMERS_PAGING_ENABLED: true
+    STRUCTURETIMER_NOTIFICATION_SET_AVATAR: true
+
+  fittings:
+    enabled: false
+    FITTINGS_AADISCORDBOT_INTEGRATION: true
+
+  mailrelay:
+    enabled: false
+    MAILRELAY_DISCORD_TASK_TIMEOUT: 60
+    MAILRELAY_DISCORD_USER_TIMEOUT: 30
+    MAILRELAY_OLDEST_MAIL_HOURS: 2
+    MAILRELAY_RELAY_GRACE_MINUTES: 30
+
+  killtracker:
+    enabled: false
+    KILLTRACKER_KILLMAIL_MAX_AGE_FOR_TRACKER: 60
+    KILLTRACKER_MAX_KILLMAILS_PER_RUN: 250
+    KILLTRACKER_PURGE_KILLMAILS_AFTER_DAYS: 30
+    KILLTRACKER_WEBHOOK_SET_AVATAR: true
+    KILLTRACKER_STORING_KILLMAILS_ENABLED: false
+
+  moonmining:
+    enabled: false
+    MOONMINING_ADMIN_NOTIFICATIONS_ENABLED: true
+    MOONMINING_COMPLETED_EXTRACTIONS_HOURS_UNTIL_STALE: 12
+    MOONMINING_REPROCESSING_YIELD: 0.85
+    MOONMINING_USE_REPROCESS_PRICING: false
+    MOONMINING_VOLUME_PER_DAY: 960400
+    MOONMINING_DAYS_PER_MONTH: 30.4
+    MOONMINING_OVERWRITE_SURVEYS_WITH_ESTIMATES: false
+
+  memberaudit:
+    enabled: false
+    APP_UTILS_NOTIFY_THROTTLED_TIMEOUT: 86400
+    MEMBERAUDIT_APP_NAME: 'Member Audit'
+    MEMBERAUDIT_DATA_RETENTION_LIMIT: 360
+    MEMBERAUDIT_ESI_ERROR_LIMIT_THRESHOLD: 25
+    MEMBERAUDIT_BULK_METHODS_BATCH_SIZE: 500
+    MEMBERAUDIT_LOCATION_STALE_HOURS: 24
+    MEMBERAUDIT_LOG_UPDATE_STATS: False
+    MEMBERAUDIT_MAX_MAILS: 250
+    MEMBERAUDIT_TASKS_MAX_ASSETS_PER_PASS: 2500
+    MEMBERAUDIT_TASKS_TIME_LIMIT: 7200
+    MEMBERAUDIT_UPDATE_STALE_RING_1: 55
+    MEMBERAUDIT_UPDATE_STALE_RING_2: 235
+    MEMBERAUDIT_UPDATE_STALE_RING_3: 475
+
+  aa_rss_to_discord:
+    enabled: false
+
+  discordbot:
+    enabled: false
+    logLevel: INFO
+    ADMIN_DISCORD_BOT_CHANNELS: []
+    SOV_DISCORD_BOT_CHANNELS: []
+    ADM_DISCORD_BOT_CHANNELS: []
+    DISCORD_BOT_SOV_STRUCTURE_OWNER_IDS: []
+    DISCORD_BOT_MEMBER_ALLIANCES: []
+    DISCORD_BOT_ADM_REGIONS: []
+    DISCORD_BOT_ADM_SYSTEMS: []
+    DISCORD_BOT_ADM_CONSTELLATIONS: []
+    cogs:
+      about: true
+      admin: true
+      members: true
+      timers: true
+      auth: true
+      sov: true
+      time: true
+      eastereggs: true
+      remind: true
+      reaction_roles: true
+    rate_limit:
+      send_channel_message_by_discord_id: "100/s"
+      send_direct_message_by_discord_id: "1/s"
+      send_direct_message_by_user_id: "1/s"
+
+  blueprints:
+    enabled: false
+
+  marketmanager:
+    enabled: false
+    MARKETMANAGER_CLEANUP_DAYS_STRUCTURE: 30
+    MARKETMANAGER_CLEANUP_DAYS_ORDER: 30
+    MARKETMANAGER_TASK_PRIORITY_ORDERS: 5
+    MARKETMANAGER_TASK_PRIORITY_STRUCTURES: 4
+    MARKETMANAGER_TASK_PRIORITY_BACKGROUND: 7
+    MARKETMANAGER_TASK_PRIORITY_WATCH_CONFIGS: 6
+    MARKETMANAGER_WEBHOOK_COLOUR_ERROR: "16711710"
+    MARKETMANAGER_WEBHOOK_COLOUR_WARNING: "14177041"
+    MARKETMANAGER_WEBHOOK_COLOUR_INFO: "42751"
+    MARKETMANAGER_WEBHOOK_COLOUR_SUCCESS: "6684416"
+    MARKETMANAGER_TYPESTATISTICS_MINIMUM_ORDER_COUNT: 10
+
+  securegroups:
+    enabled: false
+
+  buybackprogram:
+    enabled: false
+    BUYBACKPROGRAM_TRACKING_PREFILL: "aa-bbp."
+    BUYBACKPROGRAM_PRICE_SOURCE_ID: "60003760"
+    BUYBACKPROGRAM_PRICE_SOURCE_NAME: "Jita"
+    BUYBACKPROGRAM_PRICE_AGE_WARNING_LIMIT: 48
+    BUYBACKPROGRAM_PRICE_METHOD: Fuzzwork
+    BUYBACKPROGRAM_PRICE_JANICE_API_KEY: ""
+
+  discordproxy:
+    enabled: false
+    existingSecret: discordProxySecretName
+    # secret contains the key "botToken" (can re-use the discordSecretName secret)
+
+  standingsrequests:
+    enabled: false
+    SR_CORPORATIONS_ENABLED: true
+    SR_NOTIFICATIONS_ENABLED: true
+    SR_OPERATION_MODE: "alliance"
+    SR_REQUIRED_SCOPES: []
+    SR_PAGE_CACHE_SECONDS: 600
+    SR_STANDINGS_STALE_HOURS: 48
+    SR_STANDING_TIMEOUT_HOURS: 24
+    SR_SYNC_BLUE_ALTS_ENABLED: true
+    STANDINGS_API_CHARID: 0
+    STR_ALLIANCE_IDS: []
+    STR_CORP_IDS: []
+
+  taskmonitor:
+    enabled: false
+    TASKMONITOR_DATA_MAX_AGE: 24
+    TASKMONITOR_HOUSEKEEPING_FREQUENCY: 15
+    TASKMONITOR_REPORTS_MAX_AGE: 15
+    TASKMONITOR_REPORTS_MAX_TOP: 15
+
+  celeryanalytics:
+    enabled: false
+    CA_HOUSEKEEPING_DB_BACKLOG: 14
+    CA_RESULT_MAX_LEN: -1
+
+  packagemonitor:
+    enabled: true
+    PACKAGE_MONITOR_EXCLUDE_PACKAGES: []
+    PACKAGE_MONITOR_INCLUDE_PACKAGES: []
+    PACKAGE_MONITOR_NOTIFICATIONS_ENABLED: false
+    PACKAGE_MONITOR_SHOW_ALL_PACKAGES: false # the app default for this is true but I feel false is better here
+    PACKAGE_MONITOR_SHOW_EDITABLE_PACKAGES: false
+
+volumes:
+  static:
+    capacity: 100Mi
+    storageClass: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

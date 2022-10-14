@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-auth-configmap
+data:
+{{- with .Files.Glob "files/auth/*" }}
+{{ tpl .AsConfig $ | indent 2 }}
+{{- end }}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ .Release.Name }}-nginx-configmap
+data:
+{{- with .Files.Glob "files/nginx/*" }}
+{{ tpl .AsConfig $ | indent 2 }}
+{{- end }}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ .Release.Name }}-init-scripts-configmap
+data:
+{{- with .Files.Glob "files/init/*" }}
+{{ tpl .AsConfig $ | indent 2 }}
+{{- end }}

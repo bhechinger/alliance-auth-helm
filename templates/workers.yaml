@@ -1,0 +1,70 @@
+{{- if gt (int .Values.celery.workers) 1 }}
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ include "alliance-auth-helm.fullname" . }}-workers
+  labels:
+    {{- include "alliance-auth-helm.labels" . | nindent 4 }}-workers
+
+spec:
+  replicas: {{ .Values.celery.workers }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "alliance-auth-helm.selectorLabels" . | nindent 6 }}-workers
+  template:
+    metadata:
+      annotations:
+       {{- $files := .Files }}
+       {{- range tuple "files/auth/celery.py" "files/auth/local.py" "files/auth/supervisord.conf" }}
+       {{ printf "sha256sum-%s" . | replace "/" "_" }}: {{ tpl ($files.Get .) $ | sha256sum }}
+       {{- end }}
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "alliance-auth-helm.selectorLabels" . | nindent 8 }}-workers
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: '{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}'
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+          env:
+            {{- include "alliance-auth-data.env" . | nindent 12 }}
+          volumeMounts:
+            - name: auth-config
+              mountPath: /home/allianceauth/myauth/myauth/settings/local.py
+              subPath: local.py
+            - name: auth-config
+              mountPath: /home/allianceauth/myauth/myauth/celery.py
+              subPath: celery.py
+            - name: auth-config
+              mountPath: /etc/supervisor/conf.d/supervisord.conf
+              subPath: supervisord-workers.conf
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: auth-config
+          configMap:
+            name: {{ .Release.Name }}-auth-configmap
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

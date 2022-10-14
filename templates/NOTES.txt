@@ -1,0 +1,55 @@
+1. Get the application URL by running these commands:
+{{- if .Values.ingress.enabled }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ printf "%s.%s" .Values.auth.subdomain .Values.auth.domain }}
+{{- end }}
+
+Run this command to wait for the pod to be creates:
+
+    kubectl -n {{ .Release.Namespace }} get pods -w
+
+After the pod has been created run the following to get the pod name:
+
+    export POD_NAME=$(kubectl get pods -n {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "alliance-auth-helm.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+{{ with .Values.services }}
+{{- if or .structures.enabled .moonmining.enabled .memberaudit.enabled .killtracker.enabled .structuretimers.enabled }}
+
+If you haven't yet run jobs (you only need to once) run the following:
+
+{{- end }}
+{{- if or .marketmanager.enabled }}
+    kubectl -n {{ $.Release.Namespace }} exec -it ${POD_NAME} --container alliance-auth -- python /home/allianceauth/myauth/manage.py marketmanager_preload_common_eve_types
+{{- end }}
+{{- if .structures.enabled }}
+    kubectl -n {{ $.Release.Namespace }} exec -it ${POD_NAME} --container alliance-auth -- python /home/allianceauth/myauth/manage.py structures_load_eve
+{{- end }}
+{{- if .structuretimers.enabled }}
+    kubectl -n {{ $.Release.Namespace }} exec -it ${POD_NAME} --container alliance-auth -- python /home/allianceauth/myauth/manage.py structuretimers_load_eve
+{{- end }}
+{{- if .killtracker.enabled }}
+    kubectl -n {{ $.Release.Namespace }} exec -it ${POD_NAME} --container alliance-auth -- python /home/allianceauth/myauth/manage.py killtracker_load_eve
+{{- end }}
+{{- if .memberaudit.enabled }}
+    kubectl -n {{ $.Release.Namespace }} exec -it ${POD_NAME} --container alliance-auth -- python /home/allianceauth/myauth/manage.py memberaudit_load_eve
+{{- end }}
+{{- if .blueprints.enabled }}
+    kubectl -n {{ $.Release.Namespace }} exec -it ${POD_NAME} --container alliance-auth -- python /home/allianceauth/myauth/manage.py blueprints_load_types
+{{- end }}
+{{- if .securegroups.enabled }}
+    kubectl -n {{ $.Release.Namespace }} exec -it ${POD_NAME} --container alliance-auth -- python /home/allianceauth/myauth/manage.py setup_securegroup_task
+{{- end }}
+{{- if .buybackprogram.enabled }}
+    kubectl -n {{ $.Release.Namespace }} exec -it ${POD_NAME} --container alliance-auth -- python /home/allianceauth/myauth/manage.py buybackprogram_load_data
+{{- end }}
+{{- if .celeryanalytics.enabled }}
+    kubectl -n {{ $.Release.Namespace }} exec -it ${POD_NAME} --container alliance-auth -- python /home/allianceauth/myauth/manage.py ca_setup_task
+{{- end }}
+{{- if .moonmining.enabled }}
+    kubectl -n {{ $.Release.Namespace }} exec -it ${POD_NAME} --container alliance-auth -- python /home/allianceauth/myauth/manage.py moonmining_load_eve
+    kubectl -n {{ $.Release.Namespace }} exec -it ${POD_NAME} --container alliance-auth -- bash -c "cd /home/allianceauth/myauth; /opt/venv/bin/celery -A myauth call moonmining.tasks.run_calculated_properties_update"
+    Please wait until the loading is complete before continuing.
+{{- end }}
+{{- end }}
+
+Run this to create an admin user:
+
+    kubectl -n {{ .Release.Namespace }} exec -it ${POD_NAME} --container alliance-auth -- python /home/allianceauth/myauth/manage.py createsuperuser
