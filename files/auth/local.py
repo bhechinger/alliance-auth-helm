@@ -168,6 +168,18 @@ INSTALLED_APPS += [
 {{- if .packagemonitor.enabled }}
     'package_monitor',
 {{- end }}
+{{- if .hrapplications.enabled }}
+    'allianceauth.hrapplications',
+{{- end }}
+{{- if .optimer.enabled }}
+    'allianceauth.optimer',
+{{- end }}
+{{- if .corputils.enabled }}
+    'allianceauth.corputils',
+{{- end }}
+{{- if .fleetpings.enabled }}
+    'fleetpings',
+{{- end }}
 {{- end }}
 ]
 
@@ -626,4 +638,15 @@ CELERYBEAT_SCHEDULE['package_monitor_update_distributions'] = {
     'task': 'package_monitor.tasks.update_distributions',
     'schedule': crontab(minute='*/60'),
 }
+{{- end }}
+
+{{- if and (eq .Values.services.corputils.enabled true) (eq .Values.services.corputils.autoupdate true) }}
+CELERYBEAT_SCHEDULE['update_all_corpstats'] = {
+    'task': 'allianceauth.corputils.tasks.update_all_corpstats',
+    'schedule': crontab(minute=0, hour="*/6"),
+}
+{{- end }}
+
+{{- if .Values.services.fleetpings.enabled }}
+AA_FLEETPINGS_USE_DOCTRINES_FROM_FITTINGS_MODULE = {{ .Values.services.fleetpings.AA_FLEETPINGS_USE_DOCTRINES_FROM_FITTINGS_MODULE | toString | title }}
 {{- end }}

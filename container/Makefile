@@ -3,7 +3,7 @@
 # https://vic.demuzere.be/articles/golang-makefile-crosscompile/
 
 IMAGE = "alliance-auth"
-VERSION = "1.0.13"
+VERSION = "1.0.21"
 AA_VERSION = "v3.3.0"
 
 # Symlink into GOPATH
