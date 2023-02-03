@@ -8,7 +8,7 @@ image:
   repository: wonko/alliance-auth
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v3.3.0-1.0.21"
+  tag: "v3.3.0-1.0.25"
 
 imagePullSecrets: []
 nameOverride: ""
